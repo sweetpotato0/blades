@@ -31,7 +31,7 @@ When more than five maintainer members agree to implement the feature, a proposa
 
 ### Final decision maker mechanism
 
-If the maintainer team members have major differences on a requirement, the final decision is made by @Terry Mao.
+If the maintainer team members have major differences on a requirement, the final decision is made by the project maintainer.
 -->
 
 ### Proposal description
