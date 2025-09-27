@@ -1,6 +1,6 @@
 ---
 name: "\U0001F41B Bug Report"
-about: Report something that's broken. Please ensure your kratos version is still supported.
+about: Report something that's broken. Please ensure your Blades version is still supported.
 title: ''
 labels: bug
 assignees: ''
