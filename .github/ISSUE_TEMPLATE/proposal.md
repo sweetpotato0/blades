@@ -49,7 +49,7 @@ type ModelProvider interface {
     // NewStream initiates a streaming request. This method immediately returns a Streamer object, through which the caller can receive the generated content from the model step by step, suitable for building real-time, typewriter-effect conversation applications.
     NewStream(context.Context, *ModelRequest, ...ModelOption) (Streamer[*ModelResponse], error)
 }
-````
+```
 -->
 ### Usage demonstration
 <!-- 
