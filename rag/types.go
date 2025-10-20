@@ -1,46 +1,46 @@
-package blades
+package rag
 
 import "context"
 
-// Document 表示检索得到的文档或片段，包含内容、评分及自定义元数据。
+// Document represents a retrieved document or chunk with content, score, and custom metadata.
 type Document struct {
 	ID        string
 	Content   string
 	Score     float64
 	Metadata  map[string]any
-	Embedding []float64 // 向量表示
+	Embedding []float64 // Vector representation
 }
 
-// Indexer 负责向底层存储中添加或删除文档，以便后续检索使用。
+// Indexer is responsible for adding or deleting documents in the underlying storage for retrieval.
 type Indexer interface {
 	Add(ctx context.Context, docs []Document) error
 	Delete(ctx context.Context, docIDs []string) error
 }
 
-// RetrieveOptions 包含检索时的可选参数。
+// RetrieveOptions contains optional parameters for retrieval.
 type RetrieveOptions struct {
 	TopK    int
 	Filters map[string]string
 }
 
-// RetrieveOption 是用于配置检索选项的函数类型。
+// RetrieveOption is a function type for configuring retrieval options.
 type RetrieveOption func(*RetrieveOptions)
 
-// WithTopK 设置返回的最大文档数量。
+// WithTopK sets the maximum number of documents to return.
 func WithTopK(topK int) RetrieveOption {
 	return func(o *RetrieveOptions) {
 		o.TopK = topK
 	}
 }
 
-// WithFilters 设置过滤条件。
+// WithFilters sets filter conditions.
 func WithFilters(filters map[string]string) RetrieveOption {
 	return func(o *RetrieveOptions) {
 		o.Filters = filters
 	}
 }
 
-// WithFilter 添加单个过滤条件。
+// WithFilter adds a single filter condition.
 func WithFilter(key, value string) RetrieveOption {
 	return func(o *RetrieveOptions) {
 		if o.Filters == nil {
@@ -50,12 +50,12 @@ func WithFilter(key, value string) RetrieveOption {
 	}
 }
 
-// Retriever 接口负责根据请求检索相关文档。
+// Retriever interface is responsible for retrieving relevant documents based on the query.
 type Retriever interface {
 	Retrieve(ctx context.Context, query string, opts ...RetrieveOption) ([]Document, error)
 }
 
-// Reranker 接口负责对初检索结果进行重排序，提升相关性。
+// Reranker interface is responsible for reordering initial retrieval results to improve relevance.
 type Reranker interface {
 	Rerank(ctx context.Context, query string, docs []Document) ([]Document, error)
 }

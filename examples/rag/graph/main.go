@@ -15,17 +15,17 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// 1. 创建存储和组件（共用的示例实现位于 shared 包中）
+	// 1. Create store and components (shared example implementations are in the shared package)
 	store := shared.NewSimpleMemoryStore()
 
-	// 2. 创建自定义评分函数用于重排序
+	// 2. Create custom scoring function for reranking
 	scorer := func(ctx context.Context, query string, doc rag.Document) (float64, error) {
-		// 简单示例：基于内容长度的分数
+		// Simple example: score based on content length
 		return float64(len(doc.Content)) / 100.0, nil
 	}
 	reranker := shared.NewSimpleReranker(scorer)
 
-	// 3. 创建 LLM Agent（使用 OpenAI）
+	// 3. Create LLM Agent (using OpenAI)
 	provider := openai.NewChatProvider()
 	agent := blades.NewAgent(
 		"rag-graph-assistant",
@@ -33,43 +33,43 @@ func main() {
 		blades.WithModel("gpt-4o-mini"),
 	)
 
-	// 4. 创建各个节点
+	// 4. Create nodes
 	chunkingNode := NewChunkingNode()
 	indexingNode := NewIndexingNode(store)
 	retrievalNode := NewRetrievalNode(store)
 	rerankingNode := NewRerankingNode(reranker)
 	generationNode := NewGenerationNode(agent)
 
-	// 5. 定义状态转换处理器（节点间传递 RAGState）
+	// 5. Define state transition handler (passes RAGState between nodes)
 	transitionHandler := func(ctx context.Context, transition flow.Transition, output *RAGState) (*RAGState, error) {
 		log.Printf("[Transition] %s -> %s\n", transition.From, transition.To)
 		return output, nil
 	}
 
-	// 6. 构建 Graph
+	// 6. Build Graph
 	g := flow.NewGraph[*RAGState, *RAGState, blades.ModelOption]("rag-graph-pipeline", transitionHandler)
 
-	// 添加节点
+	// Add nodes
 	g.AddNode(chunkingNode)
 	g.AddNode(indexingNode)
 	g.AddNode(retrievalNode)
 	g.AddNode(rerankingNode)
 	g.AddNode(generationNode)
 
-	// 添加边：chunking -> indexing -> retrieval -> reranking -> generation
+	// Add edges: chunking -> indexing -> retrieval -> reranking -> generation
 	g.AddStart(chunkingNode)
 	g.AddEdge(chunkingNode, indexingNode)
 	g.AddEdge(indexingNode, retrievalNode)
 	g.AddEdge(retrievalNode, rerankingNode)
 	g.AddEdge(rerankingNode, generationNode)
 
-	// 7. 编译 Graph
+	// 7. Compile Graph
 	runner, err := g.Compile()
 	if err != nil {
 		log.Fatalf("Failed to compile graph: %v", err)
 	}
 
-	// 8. 准备初始状态
+	// 8. Prepare initial state
 	longDoc := `Rainy weather requires special preparation for your commute.
 	First, always carry a waterproof jacket in your bag, as weather can change unexpectedly.
 	Second, check the forecast before leaving home to plan your route accordingly.
@@ -82,7 +82,7 @@ func main() {
 		OriginalDoc: longDoc,
 	}
 
-	// 9. 运行 Graph
+	// 9. Run Graph
 	fmt.Println("=== Starting RAG Graph Pipeline ===")
 	fmt.Printf("Question: %s\n\n", initialState.Query)
 
@@ -91,7 +91,7 @@ func main() {
 		log.Fatalf("Pipeline execution failed: %v", err)
 	}
 
-	// 10. 输出最终结果
+	// 10. Output final result
 	fmt.Println("\n=== Final Answer ===")
 	fmt.Println(finalState.FinalAnswer)
 }

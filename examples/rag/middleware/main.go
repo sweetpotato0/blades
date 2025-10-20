@@ -14,7 +14,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// 1. 构建示例文档索引
+	// 1. Build sample document index
 	store := shared.NewSimpleMemoryStore()
 	chunker := shared.NewSentenceChunker(150)
 
@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("failed to index documents: %v", err)
 	}
 
-	// 2. 创建带有中间件的 Agent
+	// 2. Create Agent with middleware
 	provider := openai.NewChatProvider()
 	systemTemplate := "You are a helpful assistant. Use the context below to answer the question.\n\nContext:\n{{.Context}}"
 	userTemplate := "Question: {{.Question}}"
@@ -51,7 +51,7 @@ func main() {
 		blades.WithMiddleware(rag.AugmentationMiddleware(store, systemTemplate, userTemplate)),
 	)
 
-	// 3. 使用 PromptTemplate 构建初始问题（中间件会在运行时注入上下文）
+	// 3. Build initial question using PromptTemplate (middleware will inject context at runtime)
 	params := map[string]any{
 		"Question": "How do I prepare for a rainy commute?",
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/go-kratos/blades/rag"
 )
 
-// RAGState 在各个节点之间传递的状态
+// RAGState represents the state passed between nodes
 type RAGState struct {
 	Query        string
 	OriginalDoc  string
@@ -20,7 +20,7 @@ type RAGState struct {
 	FinalAnswer  string
 }
 
-// ChunkingNode 负责将长文档分块
+// ChunkingNode is responsible for splitting long documents into chunks
 type ChunkingNode struct {
 	chunker *shared.SentenceChunker
 }
@@ -53,7 +53,7 @@ func (n *ChunkingNode) RunStream(ctx context.Context, state *RAGState, opts ...b
 	return pipe, nil
 }
 
-// IndexingNode 负责将文档块索引到存储中
+// IndexingNode is responsible for indexing document chunks into the store
 type IndexingNode struct {
 	store rag.Indexer
 }
@@ -97,7 +97,7 @@ func (n *IndexingNode) RunStream(ctx context.Context, state *RAGState, opts ...b
 	return pipe, nil
 }
 
-// RetrievalNode 负责检索相关文档
+// RetrievalNode is responsible for retrieving relevant documents
 type RetrievalNode struct {
 	retriever rag.Retriever
 }
@@ -138,7 +138,7 @@ func (n *RetrievalNode) RunStream(ctx context.Context, state *RAGState, opts ...
 	return pipe, nil
 }
 
-// RerankingNode 负责对检索结果重排序
+// RerankingNode is responsible for reordering retrieval results
 type RerankingNode struct {
 	reranker rag.Reranker
 }
@@ -179,7 +179,7 @@ func (n *RerankingNode) RunStream(ctx context.Context, state *RAGState, opts ...
 	return pipe, nil
 }
 
-// GenerationNode 负责使用 LLM 生成答案
+// GenerationNode is responsible for generating answers using LLM
 type GenerationNode struct {
 	agent *blades.Agent
 }
@@ -195,10 +195,10 @@ func (n *GenerationNode) Name() string {
 func (n *GenerationNode) Run(ctx context.Context, state *RAGState, opts ...blades.ModelOption) (*RAGState, error) {
 	log.Println("[Generation] Generating answer with LLM...")
 
-	// 构建上下文
+	// Build context
 	contextText := rag.BuildContext(state.RerankedDocs)
 
-	// 使用 system message 提供 context，user message 只包含问题
+	// Use system message to provide context, user message contains only the question
 	prompt := &blades.Prompt{
 		Messages: []*blades.Message{
 			blades.SystemMessage(fmt.Sprintf("You are a helpful assistant. Use the following context to answer the user's question.\n\nContext:\n%s", contextText)),
