@@ -9,22 +9,20 @@ import (
 	"github.com/go-kratos/blades/contrib/openai"
 	"github.com/go-kratos/blades/flow"
 	"github.com/go-kratos/blades/rag"
-	"github.com/go-kratos/blades/rag/retrieval"
-	"github.com/go-kratos/blades/rag/store"
 )
 
 func main() {
 	ctx := context.Background()
 
-	// 1. 创建存储和组件
-	s := store.NewMemoryStore()
+	// 1. 创建存储和组件（示例实现定义在本目录下）
+	s := NewSimpleMemoryStore()
 
 	// 2. 创建自定义评分函数用于重排序
 	scorer := func(ctx context.Context, query string, doc rag.Document) (float64, error) {
 		// 简单示例：基于内容长度的分数
 		return float64(len(doc.Content)) / 100.0, nil
 	}
-	reranker := retrieval.NewCrossEncoderReranker(scorer, 2)
+	reranker := NewSimpleReranker(scorer)
 
 	// 3. 创建 LLM Agent（使用 OpenAI）
 	provider := openai.NewChatProvider()

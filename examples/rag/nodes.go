@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-kratos/blades"
 	"github.com/go-kratos/blades/rag"
-	"github.com/go-kratos/blades/rag/chunking"
 )
 
 // RAGState 在各个节点之间传递的状态
@@ -23,12 +22,12 @@ type RAGState struct {
 
 // ChunkingNode 负责将长文档分块
 type ChunkingNode struct {
-	chunker *chunking.SentenceChunker
+	chunker *SentenceChunker
 }
 
 func NewChunkingNode() *ChunkingNode {
 	return &ChunkingNode{
-		chunker: chunking.NewSentenceChunker(150),
+		chunker: NewSentenceChunker(150),
 	}
 }
 
