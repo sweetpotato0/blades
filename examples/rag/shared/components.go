@@ -1,4 +1,4 @@
-package main
+package shared
 
 import (
 	"context"
@@ -43,9 +43,12 @@ func (c *SentenceChunker) Split(text string) []string {
 			return
 		}
 		if force || buf.Len() >= c.maxChars {
-			chunks = append(chunks, strings.TrimSpace(buf.String()))
+			chunk := strings.TrimSpace(buf.String())
 			buf.Reset()
 			count = 0
+			if chunk != "" {
+				chunks = append(chunks, chunk)
+			}
 		}
 	}
 
@@ -212,6 +215,11 @@ func (r *SimpleReranker) Rerank(ctx context.Context, query string, docs []rag.Do
 	})
 
 	return scored, nil
+}
+
+// BuildContext wraps rag.BuildContext for backwards compatibility within examples.
+func BuildContext(docs []rag.Document) string {
+	return rag.BuildContext(docs)
 }
 
 func isSentenceBoundary(r rune) bool {

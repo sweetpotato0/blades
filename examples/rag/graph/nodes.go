@@ -6,28 +6,28 @@ import (
 	"log"
 
 	"github.com/go-kratos/blades"
+	"github.com/go-kratos/blades/examples/rag/shared"
 	"github.com/go-kratos/blades/rag"
 )
 
 // RAGState 在各个节点之间传递的状态
 type RAGState struct {
-	Query          string
-	OriginalDoc    string
-	Chunks         []string
-	Documents      []rag.Document
-	RerankedDocs   []rag.Document
-	FinalAnswer    string
-	ConversationID string
+	Query        string
+	OriginalDoc  string
+	Chunks       []string
+	Documents    []rag.Document
+	RerankedDocs []rag.Document
+	FinalAnswer  string
 }
 
 // ChunkingNode 负责将长文档分块
 type ChunkingNode struct {
-	chunker *SentenceChunker
+	chunker *shared.SentenceChunker
 }
 
 func NewChunkingNode() *ChunkingNode {
 	return &ChunkingNode{
-		chunker: NewSentenceChunker(150),
+		chunker: shared.NewSentenceChunker(150),
 	}
 }
 
@@ -113,12 +113,7 @@ func (n *RetrievalNode) Name() string {
 func (n *RetrievalNode) Run(ctx context.Context, state *RAGState, opts ...blades.ModelOption) (*RAGState, error) {
 	log.Printf("[Retrieval] Searching for: %s\n", state.Query)
 
-	docs, err := n.retriever.Retrieve(
-		ctx,
-		state.Query,
-		rag.WithConversationID(state.ConversationID),
-		rag.WithTopK(3),
-	)
+	docs, err := n.retriever.Retrieve(ctx, state.Query, rag.WithTopK(3))
 	if err != nil {
 		return nil, fmt.Errorf("retrieval failed: %w", err)
 	}
@@ -201,7 +196,7 @@ func (n *GenerationNode) Run(ctx context.Context, state *RAGState, opts ...blade
 	log.Println("[Generation] Generating answer with LLM...")
 
 	// 构建上下文
-	contextText := buildContext(state.RerankedDocs)
+	contextText := rag.BuildContext(state.RerankedDocs)
 
 	// 使用 system message 提供 context，user message 只包含问题
 	prompt := &blades.Prompt{
@@ -231,12 +226,4 @@ func (n *GenerationNode) RunStream(ctx context.Context, state *RAGState, opts ..
 	pipe.Send(result)
 	pipe.Close()
 	return pipe, nil
-}
-
-func buildContext(docs []rag.Document) string {
-	var context string
-	for i, doc := range docs {
-		context += fmt.Sprintf("[%d] %s\n", i+1, doc.Content)
-	}
-	return context
 }

@@ -76,6 +76,38 @@ func (p *PromptTemplate) Build() (*Prompt, error) {
 	return NewPrompt(messages...), nil
 }
 
+// Clone returns a deep copy of the PromptTemplate, allowing safe reuse across goroutines.
+func (p *PromptTemplate) Clone() *PromptTemplate {
+	if p == nil {
+		return nil
+	}
+	cloned := make([]*templateText, len(p.tmpls))
+	for i, tmpl := range p.tmpls {
+		if tmpl == nil {
+			continue
+		}
+		copyTmpl := *tmpl
+		cloned[i] = &copyTmpl
+	}
+	return &PromptTemplate{tmpls: cloned}
+}
+
+// BuildWith renders the template using the provided vars slice, assigning vars[0] to the first message, etc.
+// If fewer vars are provided than messages, remaining messages reuse their existing vars.
+func (p *PromptTemplate) BuildWith(vars ...any) (*Prompt, error) {
+	clone := p.Clone()
+	if clone == nil {
+		return nil, fmt.Errorf("prompt template is nil")
+	}
+	for i, data := range vars {
+		if i >= len(clone.tmpls) {
+			break
+		}
+		clone.tmpls[i].vars = data
+	}
+	return clone.Build()
+}
+
 // NewTemplateMessage creates a single Message from a template string and variables.
 func NewTemplateMessage(role Role, tmpl string, vars any) (*Message, error) {
 	var buf strings.Builder

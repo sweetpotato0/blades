@@ -1,6 +1,6 @@
 # RAG (Retrieval-Augmented Generation)
 
-`rag/` 现仅包含核心接口和类型别名，所有实现均位于应用或示例中。开发者可以在自己的业务代码里实现 `rag.Indexer`、`rag.Retriever`、`rag.Reranker` 等接口，也可以参考 `examples/rag/` 的演示示例。
+`rag/` 提供 RAG 核心接口、上下文构建工具以及可复用的提示增强中间件。开发者可以在自己的业务代码里实现 `rag.Indexer`、`rag.Retriever`、`rag.Reranker` 等接口，也可以参考 `rag.AugmentationMiddleware` 与 `examples/rag/` 的演示示例。
 
 ## 开始使用
 
@@ -15,7 +15,9 @@ func (s *MyStore) Retrieve(ctx context.Context, query string, opts ...rag.Retrie
 }
 ```
 
-想要快速体验，可以运行 `examples/rag/` 下的示例来查看完整的流水线编排方式，该示例展示了如何利用第三方库实现分块、检索和重排。
+想要快速体验，可以运行 `examples/rag/graph` 或 `examples/rag/middleware` 下的示例：
+- `graph` 展示了如何通过 `flow.Graph` 串联分块、索引、检索、重排与生成。
+- `middleware` 则展示了用 `Agent` 中间件 + `PromptTemplate` 动态注入检索上下文的做法。
 
 ## 贡献指南
 

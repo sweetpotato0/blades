@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-kratos/blades"
 	"github.com/go-kratos/blades/contrib/openai"
+	"github.com/go-kratos/blades/examples/rag/shared"
 	"github.com/go-kratos/blades/flow"
 	"github.com/go-kratos/blades/rag"
 )
@@ -14,28 +15,28 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// 1. 创建存储和组件（示例实现定义在本目录下）
-	s := NewSimpleMemoryStore()
+	// 1. 创建存储和组件（共用的示例实现位于 shared 包中）
+	store := shared.NewSimpleMemoryStore()
 
 	// 2. 创建自定义评分函数用于重排序
 	scorer := func(ctx context.Context, query string, doc rag.Document) (float64, error) {
 		// 简单示例：基于内容长度的分数
 		return float64(len(doc.Content)) / 100.0, nil
 	}
-	reranker := NewSimpleReranker(scorer)
+	reranker := shared.NewSimpleReranker(scorer)
 
 	// 3. 创建 LLM Agent（使用 OpenAI）
 	provider := openai.NewChatProvider()
 	agent := blades.NewAgent(
-		"rag-assistant",
+		"rag-graph-assistant",
 		blades.WithProvider(provider),
 		blades.WithModel("gpt-4o-mini"),
 	)
 
 	// 4. 创建各个节点
 	chunkingNode := NewChunkingNode()
-	indexingNode := NewIndexingNode(s)
-	retrievalNode := NewRetrievalNode(s)
+	indexingNode := NewIndexingNode(store)
+	retrievalNode := NewRetrievalNode(store)
 	rerankingNode := NewRerankingNode(reranker)
 	generationNode := NewGenerationNode(agent)
 
@@ -46,7 +47,7 @@ func main() {
 	}
 
 	// 6. 构建 Graph
-	g := flow.NewGraph[*RAGState, *RAGState, blades.ModelOption]("rag-pipeline", transitionHandler)
+	g := flow.NewGraph[*RAGState, *RAGState, blades.ModelOption]("rag-graph-pipeline", transitionHandler)
 
 	// 添加节点
 	g.AddNode(chunkingNode)
@@ -77,13 +78,12 @@ func main() {
 	Finally, leave earlier than usual to account for slower traffic during heavy rain.`
 
 	initialState := &RAGState{
-		Query:          "How do I prepare for a rainy commute?",
-		OriginalDoc:    longDoc,
-		ConversationID: "session-001",
+		Query:       "How do I prepare for a rainy commute?",
+		OriginalDoc: longDoc,
 	}
 
 	// 9. 运行 Graph
-	fmt.Println("=== Starting RAG Pipeline ===")
+	fmt.Println("=== Starting RAG Graph Pipeline ===")
 	fmt.Printf("Question: %s\n\n", initialState.Query)
 
 	finalState, err := runner.Run(ctx, initialState)
