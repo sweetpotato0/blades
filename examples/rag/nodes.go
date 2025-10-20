@@ -113,7 +113,12 @@ func (n *RetrievalNode) Name() string {
 func (n *RetrievalNode) Run(ctx context.Context, state *RAGState, opts ...blades.ModelOption) (*RAGState, error) {
 	log.Printf("[Retrieval] Searching for: %s\n", state.Query)
 
-	docs, err := n.retriever.Retrieve(ctx, state.Query, rag.WithTopK(3))
+	docs, err := n.retriever.Retrieve(
+		ctx,
+		state.Query,
+		rag.WithConversationID(state.ConversationID),
+		rag.WithTopK(3),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("retrieval failed: %w", err)
 	}
