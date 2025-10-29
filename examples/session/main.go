@@ -21,7 +21,7 @@ func main() {
 		blades.UserMessage("Can you tell me about the causes of World War II?"),
 	)
 	// Create a new session
-	session := blades.NewSession("conversation_123")
+	session := blades.NewSession()
 	ctx := blades.NewSessionContext(context.Background(), session)
 	// Run the agent
 	result, err := agent.Run(ctx, prompt)
@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := sessionStore.SaveSession(ctx, session); err != nil {
+	if err := sessionStore.Save(ctx, session); err != nil {
 		log.Fatal(err)
 	}
 	log.Println(result.Text())
